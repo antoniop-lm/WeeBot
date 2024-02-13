@@ -12,37 +12,22 @@ BOT_USERNAME: Final = creds['BOT_USERNAME']
 
 # Menu
 menu = {
-    "Anime": "🎬",
     "List": "📃",
     "Update": "🔄",
-    "Follow": "➕",
+    "Track": "✅",
+    "Untrack": "❌",
+    "Subscribe": "🔼",
+    "Unsubscribe" : "🔽",
     "Ping": "🚨"
 }
 
-subMenu = {
-    "Anime": {
-        "Track" : "✅",
-        "Untrack": "❌"
-    },
-    "Follow": {
-        "Subscribe": "✅",
-        "Unsubscribe" : "❌"
-    }
-}
-
 help = {
-    "Anime": {
-        "Description" : "Group related commands to \\(un\\)track an anime",
-        "Track" : "Choose an anime to track new episodes",
-        "Untrack": "Stop anime new episodes updates"
-    },
     "List": "List all current animes being watched and their progress",
     "Update": "Set which was the last episode watched for an anime",
-    "Follow": {
-        "Description" : "User related commands to \\(un\\)follow a watch party",
-        "Subscribe": "Subscribe to receive updates when a watch party is happening",
-        "Unsubscribe" : "Unsubscribe to stop receiving anime pings"
-    },
+    "Track" : "Choose an anime to track new episodes",
+    "Untrack": "Stop anime new episodes updates",
+    "Subscribe": "Subscribe to receive updates when a watch party is happening",
+    "Unsubscribe" : "Unsubscribe to stop receiving anime pings",
     "Ping": "Ping all subscribed persons to an anime"
 }
 
@@ -72,16 +57,7 @@ async def options_command (update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command (update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = ''
     for option in help:
-        if type(help.get(option)) is str:
-            text += '*__'+option+':__* '+help.get(option)+'\n'
-        else:
-            text += '*__'+option+':__* '
-            for subOption in help.get(option):
-                if 'Description' in subOption:
-                    text += help.get(option).get(subOption)+'\n'
-                else:
-                    text += '➖ *'+subOption+':* '+help.get(option).get(subOption)+'\n'
-        text += '\n'
+        text += '*__'+option+':__* '+help.get(option)+'\n\n'
 
     await context.bot.send_message(chat_id=update.effective_chat.id, 
                                    text=text,
@@ -92,52 +68,36 @@ async def menu_callback (update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get callback data
     option = update.callback_query.data
 
-    # Check if callback should trigger Sub Menu
-    buttons = []
-    if subMenu.get(option):
-        row = []
-        for subOption in subMenu.get(option):
-            row.append(InlineKeyboardButton(subMenu.get(option).get(subOption)+' '+subOption, callback_data=subOption))
-        buttons.append(row)
-    
-    # Create menu
-    if buttons:
-        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text='I need to smell a little more: 👃',
-                                            reply_markup=InlineKeyboardMarkup(buttons))
-        await update.callback_query.answer()
     # Handle options
-    else:
-        if option == 'List':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Update':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Ping':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Track':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Untrack':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Subscribe':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        elif option == 'Unsubscribe':
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                            message_id=update.callback_query.message.message_id,
-                                            text=option)
-        await update.callback_query.answer('Success')
+    if option == 'List':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Update':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Ping':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Track':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Untrack':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Subscribe':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    elif option == 'Unsubscribe':
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
+                                        message_id=update.callback_query.message.message_id,
+                                        text=option)
+    await update.callback_query.answer('Success')
         
 
 # Responses
@@ -147,10 +107,6 @@ def handle_response(text: str) -> str:
 
     # Handle message
     if text in menu:
-        return text
-    if text in subMenu["Anime"]:
-        return text
-    if text in subMenu["Follow"]:
         return text
     if 'hello' in processed:
         return 'Haaai!'
