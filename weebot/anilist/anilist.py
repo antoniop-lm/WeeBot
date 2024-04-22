@@ -91,9 +91,6 @@ def search_anime(id: int = None, search_term: str = None):
             )
             ratio_romaji = ratio(media["title"]["romaji"].lower(), search_term.lower())
             ratio_native = ratio(media["title"]["native"].lower(), search_term.lower())
-            # print("English Score: ", ratio_english)
-            # print("Romaji Score: ", ratio_romaji)
-            # print("Native Score: ", ratio_native)
 
             if (
                 ratio_english >= weebot.score_treshold
