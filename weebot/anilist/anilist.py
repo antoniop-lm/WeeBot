@@ -25,9 +25,10 @@ Subscribers
 from operator import is_
 import requests
 import json
+import logging
 from pprint import pprint
-from Levenshtein import ratio
-import weebot
+from Levenshtein import ratio, jaro, jaro_winkler, distance
+from weebot import URL, SCORE_TRESHOLD, ANIMEURL, ANIME_RETURN_SIZE, ANIME_DISTANCE
 
 
 """Searchs for an anime entry
@@ -58,56 +59,132 @@ def search_anime(id: int = None, search_term: str = None):
                     hasNextPage
                 }
                 media(search: $searchTerm, id: $id, type: ANIME) {
+                    id
                     title {
                         english
                         romaji
                         native
                         userPreferred
                     }
-                    season
-                    seasonYear
-                    id
+                    description
+                    status
+                    startDate {
+                        year
+                        month
+                        day
+                    }
                     format
                     episodes
+                    nextAiringEpisode {
+                        id
+                        episode
+                        airingAt
+                        timeUntilAiring
+                    }
+                    airingSchedule {
+                        nodes {
+                            id
+                            episode
+                            airingAt
+                            timeUntilAiring
+                        }
+                        pageInfo {
+                            total
+                            perPage
+                            currentPage
+                            lastPage
+                            hasNextPage
+                        }
+                    }
+                    externalLinks {
+                        site
+                        url
+                    }
                 }
             }
         }
     """
 
     # Define our query variables and values that will be used in the query request
-    variables = {"searchTerm": search_term, "perPage": 5}
+    if (search_term is None):
+        variables = {"id": id, "perPage": 1}
 
-    response = requests.post(weebot.url, json={"query": query, "variables": variables})
+    else:
+        variables = {"searchTerm": search_term, "perPage": 50}
+
+    response = requests.post(URL, json={"query": query, "variables": variables})
 
     content = response.json()
     anime_found = []
+    finalList = []
 
     # saving the closest match to the provided title
     if search_term:
         for media in content["data"]["Page"]["media"]:
-            ratio_english = ratio(
+            ratio_english = calcRatio(
                 media["title"]["english"].lower() if media["title"]["english"] else "",
                 search_term.lower(),
             )
-            ratio_romaji = ratio(media["title"]["romaji"].lower(), search_term.lower())
-            ratio_native = ratio(media["title"]["native"].lower(), search_term.lower())
+            ratio_romaji = calcRatio(media["title"]["romaji"].lower(), search_term.lower())
+            ratio_native = calcRatio(media["title"]["native"].lower(), search_term.lower())
+            
+            maxRatio = max(ratio_english,ratio_romaji,ratio_native)
 
-            if (
-                ratio_english >= weebot.score_treshold
-                or ratio_romaji >= weebot.score_treshold
-                or ratio_native >= weebot.score_treshold
-            ):
+            if maxRatio >= SCORE_TRESHOLD:
                 anime_found.append(
                     {
                         "name": media["title"]["romaji"],
-                        "score": ratio_romaji,
+                        "namePreferred": media["title"]["userPreferred"],
+                        "score": maxRatio,
+                        "format": media["format"],
+                        "status": media["status"],
+                        "nextAiringEpisode": media["nextAiringEpisode"],
                         "id": media["id"],
+                        "url": ANIMEURL + str(media["id"]),
+                        "episodes": media["episodes"]
                     }
                 )
-                continue
     else:
-        anime_found.append(
-            {"name": media["title"]["romaji"], "score": 1.0, "id": media["id"]}
-        )
+        for media in content["data"]["Page"]["media"]:
+            anime_found.append(
+                {
+                    "name": media["title"]["romaji"], 
+                    "namePreferred": media["title"]["userPreferred"],
+                    "score": 1.0, 
+                    "format": media["format"],
+                    "status": media["status"],
+                    "nextAiringEpisode": media["nextAiringEpisode"],
+                    "id": media["id"],
+                    "url": ANIMEURL + str(media["id"]),
+                    "episodes": media["episodes"]
+                }
+            )
 
-    return anime_found
+    anime_found.sort(key=orderByScore, reverse=True)
+
+    count = 0
+    for anime in anime_found:
+        if count == ANIME_RETURN_SIZE:
+            break
+        finalList.append(anime)
+        count += 1
+
+    return finalList
+
+def calcRatio(anime: str, search_term: str):
+    ratioValue = ratio(anime.lower(), search_term.lower())
+    jaroValue = jaro(anime.lower(), search_term.lower())
+    jaroWinklerValue = jaro_winkler(anime.lower(), search_term.lower())
+
+    meanRatio = (ratioValue + jaroValue + jaroWinklerValue)/3
+
+    substring = 0
+    if (anime in search_term) or (search_term in anime) or distance(anime,search_term) < ANIME_DISTANCE:
+        substring = 1
+
+    finalRatio = meanRatio + substring
+
+    return finalRatio
+
+def orderByScore(e):
+    return e["score"]
