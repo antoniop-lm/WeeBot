@@ -1,11 +1,19 @@
-from . import anilist,track
+from . import integrations, database, telegram
+import os
 URL = "https://graphql.anilist.co"
 ANIMEURL = "https://anilist.co/anime/"
 SCORE_TRESHOLD = 0.7
-TRACKED_LIST_FILE = r".\data\tracked_list.json"
+TRACKED_LIST_FILE = os.path.join('.','data','tracked_list.json')
+CONVERSATION_FILE = os.path.join('.','data','conversations.pkl')
+CONVERSATION_PAGINATION_FILE = os.path.join('.','data','conversationPagination.pkl')
+CONVERSATION_FUZZY_STR_FILE = os.path.join('.','data','conversationFuzzyStr.pkl')
 PAGE_SIZE = 8
 ANIME_RETURN_SIZE = 5
 ANIME_DISTANCE = 5
+MAX_LINE_SIZE = 8
+CONVERSATION_CHECK_DELAY = 60
+DELETE_DELAY = 30
+EPISODE_CHECK_DELAY = 900
 MEDIA_STATUS = {
     "FINISHED"          : "FINISHED",
     "RELEASING"         : "RELEASING",
