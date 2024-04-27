@@ -17,7 +17,7 @@ __version__ = "1.0.0"
 __maintainer__ = "Antônio Mazzarolo"
 __email__ = "aplmazzarolo@gmail.com"
 
-from weebot import EPISODE_CHECK_DELAY, DELETE_DELAY, CONVERSATION_CHECK_DELAY
+from weebot import EPISODE_CHECK_DELAY, DELETE_DELAY, CONVERSATION_CHECK_DELAY, MESSAGE_TIMEOUT
 from weebot import CONVERSATION_FILE, CONVERSATION_FUZZY_STR_FILE, CONVERSATION_PAGINATION_FILE
 import weebot.settings
 import logging, threading, pickle, datetime, asyncio
@@ -26,7 +26,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 from weebot.database.update import update_all_anime
 from weebot.telegram.callbacks import menu_callback
-from weebot.telegram.commands import options_command, help_command, ping_command, subscribe_command, list_command
+from weebot.telegram.commands import options_command, help_command, ping_command, subscribe_command, list_command, unsubscribe_command, untrack_command
 from weebot.telegram.handlers import handle_message
 
 def handleSavedConversations():
@@ -79,7 +79,10 @@ async def sendEpisodesUpdates(chat: str, anime: str):
     :param anime: Anime message content
     """
     app = Application.builder().token(weebot.settings.TOKEN).build()
-    await app.bot.send_message(chat_id=chat,text=anime)
+    await app.bot.send_message(chat_id=chat, 
+                               text=anime, 
+                               read_timeout=MESSAGE_TIMEOUT, 
+                               write_timeout=MESSAGE_TIMEOUT)
 
 def handleEpisodesUpdates():
     """
@@ -121,6 +124,8 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('ping', ping_command))
     app.add_handler(CommandHandler('subscribe', subscribe_command))
+    app.add_handler(CommandHandler('unsubscribe', unsubscribe_command))
+    app.add_handler(CommandHandler('untrack', untrack_command))
     app.add_handler(CommandHandler('list', list_command))
 
     # Messages

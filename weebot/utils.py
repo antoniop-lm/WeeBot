@@ -17,7 +17,7 @@ __version__ = "1.0.0"
 __maintainer__ = "Antônio Mazzarolo"
 __email__ = "aplmazzarolo@gmail.com"
 
-from weebot import ANIMEURL, MAX_LINE_SIZE
+from weebot import ANIMEURL, MAX_LINE_SIZE, MESSAGE_TIMEOUT
 import weebot.settings
 import logging, re, datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -141,14 +141,22 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
     :param confirmationText: Telegram message confirmation text
     :param successfulText: Telegram message successful text
     """
+    # Get data
+    isCallback = update.callback_query != None
+    chat_id = update.effective_chat.id
+    user_id = update.callback_query.from_user.id if isCallback else update.message.from_user.id
+    username = update.callback_query.from_user.username if isCallback else update.message.from_user.username
+    message_id = update.callback_query.message.message_id if isCallback else ''
+    optionClicked = update.callback_query.data if isCallback else ''
+
     # Set option data
     buttons = []
     row = []
     text = baseText
-    optionClicked = update.callback_query.data
-    pageNumber = (weebot.settings.conversationPagination.get(str(update.callback_query.message.message_id)).get('Value') 
-                  if str(update.callback_query.message.message_id) in weebot.settings.conversationPagination 
+    pageNumber = (weebot.settings.conversationPagination.get(str(message_id)).get('Value') 
+                  if str(message_id) in weebot.settings.conversationPagination 
                   else 1)
+    logging.info('teste')
     
     # Update page number based on option
     match optionClicked:
@@ -160,15 +168,22 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
     # Get anime list based on operation
     match operation:
         case 'Subscribe':
-            aniList, size = retrieve_subscribable_anime_list(chat_id=str(update.effective_chat.id),user_id=str(update.callback_query.from_user.id),pageNumber=pageNumber)
+            aniList, size = retrieve_subscribable_anime_list(chat_id=str(chat_id),
+                                                             user_id=str(user_id),
+                                                             pageNumber=pageNumber)
         case 'Unsubscribe':
-            aniList, size = retrieve_unsubscribable_anime_list(chat_id=str(update.effective_chat.id),user_id=str(update.callback_query.from_user.id),pageNumber=pageNumber)
+            aniList, size = retrieve_unsubscribable_anime_list(chat_id=str(chat_id),
+                                                               user_id=str(user_id),
+                                                               pageNumber=pageNumber)
         case 'Ping':
-            aniList, size = retrieve_pingable_anime_list(chat_id=str(update.effective_chat.id),pageNumber=pageNumber)
+            aniList, size = retrieve_pingable_anime_list(chat_id=str(chat_id),
+                                                         pageNumber=pageNumber)
         case 'Update':
-            aniList, size = retrieve_updatable_anime_list(chat_id=str(update.effective_chat.id),pageNumber=pageNumber)
+            aniList, size = retrieve_updatable_anime_list(chat_id=str(chat_id),
+                                                          pageNumber=pageNumber)
         case _:
-            aniList, size = retrieve_anime_list(chat_id=str(update.effective_chat.id),pageNumber=pageNumber)
+            aniList, size = retrieve_anime_list(chat_id=str(chat_id),
+                                                pageNumber=pageNumber)
 
     # Choose what to do
     match optionClicked:
@@ -187,10 +202,12 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
             buttons.append(row)
 
             # Update message
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                message_id=update.callback_query.message.message_id,
+            await context.bot.edit_message_text(chat_id=chat_id, 
+                                                message_id=message_id,
                                                 text=text,
-                                                reply_markup=InlineKeyboardMarkup(buttons))
+                                                reply_markup=InlineKeyboardMarkup(buttons),
+                                                read_timeout=MESSAGE_TIMEOUT,
+                                                write_timeout=MESSAGE_TIMEOUT)
             return
         case str(x) if 'yes' in x:
             # Get data
@@ -200,23 +217,29 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
             # Insert match case to call backend
             match operation:
                 case 'Subscribe':
-                    updated, animeName = subscribe_anime(id=int(index),chat_id=str(update.effective_chat.id),
-                                                        user_id=str(update.callback_query.from_user.id),username=str(update.callback_query.from_user.username))
-                    text = '@'+update.callback_query.from_user.username+' is already subscribed to '+animeName+'! 😅'
+                    updated, animeName = subscribe_anime(id=int(index),
+                                                         chat_id=str(chat_id),
+                                                         user_id=str(user_id),
+                                                         username=str(username))
+                    text = '@'+username+' is already subscribed to '+animeName+'! 😅'
                     if updated:
-                        text = '@'+update.callback_query.from_user.username+successfulText+animeName+'! 😍'
+                        text = '@'+username+successfulText+animeName+'! 😍'
                 case 'Unsubscribe':
-                    updated, animeName = unsubscribe_anime(id=int(index),chat_id=str(update.effective_chat.id),user_id=str(update.callback_query.from_user.id))
+                    updated, animeName = unsubscribe_anime(id=int(index),
+                                                           chat_id=str(chat_id),
+                                                           user_id=str(user_id))
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if updated:
-                        text = '@'+update.callback_query.from_user.username+successfulText+animeName+'!'
+                        text = '@'+username+successfulText+animeName+'!'
                 case 'Untrack':
-                    updated, animeName = untrack_anime(id=int(index),chat_id=str(update.effective_chat.id))
+                    updated, animeName = untrack_anime(id=int(index),
+                                                       chat_id=str(chat_id))
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if updated:
-                        text = '@'+update.callback_query.from_user.username+successfulText+animeName+'!'
+                        text = successfulText+animeName+'!'
                 case 'Ping':
-                    usernames, animeName = ping_anime(id=int(index),chat_id=str(update.effective_chat.id))
+                    usernames, animeName = ping_anime(id=int(index),
+                                                      chat_id=str(chat_id))
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if len(usernames) != 0:
                         text = ' '.join(usernames)+successfulText+animeName+'!'
@@ -225,46 +248,70 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                     conversationFuzzyStrValue = {
                         "Value": operation+' '+index,
                         "Timestamp": datetime.datetime.now(),
-                        "Message": str(update.callback_query.message.message_id)
+                        "Message": str(message_id)
                     }
-                    conversationFuzzyStrValueId = str(update.effective_chat.id)+str(update.callback_query.from_user.id)
+                    conversationFuzzyStrValueId = str(chat_id)+str(user_id)
                     weebot.settings.conversationFuzzyStr.update({conversationFuzzyStrValueId: conversationFuzzyStrValue})
             
             # Update message
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                message_id=update.callback_query.message.message_id,
-                                                text=text)
+            await context.bot.edit_message_text(chat_id=chat_id, 
+                                                message_id=message_id,
+                                                text=text,
+                                                read_timeout=MESSAGE_TIMEOUT,
+                                                write_timeout=MESSAGE_TIMEOUT)
             
             # Clear conversation handlers
-            if str(update.callback_query.message.message_id) in weebot.settings.conversationPagination:
-                weebot.settings.conversationPagination.pop(str(update.callback_query.message.message_id))
-            if str(update.callback_query.message.message_id) in weebot.settings.conversations:
-                weebot.settings.conversations.pop(str(update.callback_query.message.message_id))
+            if str(message_id) in weebot.settings.conversationPagination:
+                weebot.settings.conversationPagination.pop(str(message_id))
+            if str(message_id) in weebot.settings.conversations:
+                weebot.settings.conversations.pop(str(message_id))
             return
         case _:
             # Clear conversation handlers
-            if str(update.callback_query.message.message_id) in weebot.settings.conversationPagination and 'no' not in optionClicked:
-                weebot.settings.conversationPagination.pop(str(update.callback_query.message.message_id))
+            if str(message_id) in weebot.settings.conversationPagination and 'no' not in optionClicked:
+                weebot.settings.conversationPagination.pop(str(message_id))
                 
             # Return one screen
             if 'back' in optionClicked:
                 buttons, text = createMenu('')
-                await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                    message_id=update.callback_query.message.message_id,
+                await context.bot.edit_message_text(chat_id=chat_id, 
+                                                    message_id=message_id,
                                                     text=text,
-                                                    reply_markup=InlineKeyboardMarkup(buttons))
+                                                    reply_markup=InlineKeyboardMarkup(buttons),
+                                                    read_timeout=MESSAGE_TIMEOUT,
+                                                    write_timeout=MESSAGE_TIMEOUT)
                 return
 
     # Create menu, update conversation handlers and message
-    buttons, text = createPagination(aniList,text,size,pageNumber,operation)
+    buttons, text = createPagination(aniList, text, size, pageNumber, operation)
     conversationPaginationValue = {
         "Value": pageNumber,
         "Timestamp": datetime.datetime.now()
     }
-    weebot.settings.conversationPagination.update({str(update.callback_query.message.message_id): conversationPaginationValue})
-    await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                        message_id=update.callback_query.message.message_id,
-                                        text=text,
-                                        reply_markup=InlineKeyboardMarkup(buttons),
-                                        parse_mode='HTML',
-                                        disable_web_page_preview=True)
+    weebot.settings.conversationPagination.update({str(message_id): conversationPaginationValue})
+    if isCallback:
+        await context.bot.edit_message_text(chat_id=chat_id, 
+                                            message_id=message_id,
+                                            text=text,
+                                            reply_markup=InlineKeyboardMarkup(buttons),
+                                            parse_mode='HTML',
+                                            disable_web_page_preview=True,
+                                            read_timeout=MESSAGE_TIMEOUT,
+                                            write_timeout=MESSAGE_TIMEOUT)
+    else:
+        # Send message
+        created_message = await context.bot.send_message(chat_id=chat_id, 
+                                                        text=text,
+                                                        reply_markup=InlineKeyboardMarkup(buttons),
+                                                        parse_mode='HTML',
+                                                        disable_web_page_preview=True,
+                                                        read_timeout=MESSAGE_TIMEOUT,
+                                                        write_timeout=MESSAGE_TIMEOUT)
+        
+        # Create conversation handler
+        conversationValue = {
+            "Value": str(chat_id)+str(user_id),
+            "Timestamp": datetime.datetime.now()
+        }
+
+        weebot.settings.conversations.update({str(created_message.message_id): conversationValue})

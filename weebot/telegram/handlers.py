@@ -20,7 +20,7 @@ __version__ = "1.0.0"
 __maintainer__ = "Antônio Mazzarolo"
 __email__ = "aplmazzarolo@gmail.com"
 
-from weebot import ANIMEURL
+from weebot import ANIMEURL, MESSAGE_TIMEOUT
 import weebot.settings
 from weebot.utils import use_regex, createMenu, optionHandler
 import logging, datetime
@@ -39,10 +39,12 @@ async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: Telegram's context
     """
     # Get data
-    text = 'These are the Animes being tracked:\n'
+    chat_id = update.effective_chat.id
+    message_id = update.callback_query.message.message_id
     optionClicked = update.callback_query.data
-    pageNumber = (weebot.settings.conversationPagination.get(str(update.callback_query.message.message_id)).get('Value') 
-                  if str(update.callback_query.message.message_id) in weebot.settings.conversationPagination 
+    text = 'These are the Animes being tracked:\n'
+    pageNumber = (weebot.settings.conversationPagination.get(str(message_id)).get('Value') 
+                  if str(message_id) in weebot.settings.conversationPagination 
                   else 1)
     buttons = []
     row = []
@@ -57,20 +59,23 @@ async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         case _: 
             # Remove conversation pagination handler
-            if str(update.callback_query.message.message_id) in weebot.settings.conversationPagination:
-                weebot.settings.conversationPagination.pop(str(update.callback_query.message.message_id))
+            if str(message_id) in weebot.settings.conversationPagination:
+                weebot.settings.conversationPagination.pop(str(message_id))
 
             # Return one screen
             if 'back' in optionClicked:
                 buttons, text = createMenu('')
-                await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                    message_id=update.callback_query.message.message_id,
+                await context.bot.edit_message_text(chat_id=chat_id, 
+                                                    message_id=message_id,
                                                     text=text,
-                                                    reply_markup=InlineKeyboardMarkup(buttons))
+                                                    reply_markup=InlineKeyboardMarkup(buttons),
+                                                    read_timeout=MESSAGE_TIMEOUT,
+                                                    write_timeout=MESSAGE_TIMEOUT)
                 return
 
     # Get anime list and set message
-    aniList, aniListSize, size, indexInformation = retrieve_anime_list_detail(chat_id=str(update.effective_chat.id),pageNumber=pageNumber)
+    aniList, aniListSize, size, indexInformation = retrieve_anime_list_detail(chat_id=str(chat_id),
+                                                                              pageNumber=pageNumber)
     text += indexInformation
 
     # Create menu
@@ -101,13 +106,15 @@ async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Value": pageNumber,
         "Timestamp": datetime.datetime.now()
     }
-    weebot.settings.conversationPagination.update({str(update.callback_query.message.message_id): conversationPaginationValue})
-    await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                        message_id=update.callback_query.message.message_id,
+    weebot.settings.conversationPagination.update({str(message_id): conversationPaginationValue})
+    await context.bot.edit_message_text(chat_id=chat_id, 
+                                        message_id=message_id,
                                         text=text,
                                         reply_markup=InlineKeyboardMarkup(buttons),
                                         parse_mode='HTML',
-                                        disable_web_page_preview=True)
+                                        disable_web_page_preview=True,
+                                        read_timeout=MESSAGE_TIMEOUT,
+                                        write_timeout=MESSAGE_TIMEOUT)
 
 async def handle_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -123,7 +130,7 @@ async def handle_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     successfulText = 'Please send me only the episode number.'
 
     # Handle update flow
-    await optionHandler('Update',update,context,baseText,confirmationText,successfulText)
+    await optionHandler('Update', update, context, baseText, confirmationText, successfulText)
 
 async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -134,59 +141,71 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: Telegram's context
     """
     # Get data
-    text = 'Please, send me the Anime name you want to track:\n\n'
+    chat_id = update.effective_chat.id
+    user_id = update.callback_query.from_user.id
+    username = update.callback_query.from_user.username
+    message_id = update.callback_query.message.message_id
     optionClicked = update.callback_query.data
+    text = 'Please, send me the Anime name you want to track:\n\n'
 
     # Choose what to do
     match optionClicked:
         case str(x) if 'Substracker' in x:
             index = x.split()[1]
-            updated, animeName = subscribe_anime(id=int(index),chat_id=str(update.effective_chat.id),
-                                                 user_id=str(update.callback_query.from_user.id),username=str(update.callback_query.from_user.username))
-            text = '@'+update.callback_query.from_user.username+' is already subscribed to '+animeName+'! 😅'
+            updated, animeName = subscribe_anime(id=int(index),
+                                                 chat_id=str(chat_id),
+                                                 user_id=str(user_id),
+                                                 username=str(username))
+            text = '@'+username+' is already subscribed to '+animeName+'! 😅'
             if (updated):
-                text = '@'+update.callback_query.from_user.username+' successfully subscribed to '+animeName+'! 😍'
-            await context.bot.send_message(chat_id=update.effective_chat.id, 
-                                           text=text)
+                text = '@'+username+' successfully subscribed to '+animeName+'! 😍'
+            await context.bot.send_message(chat_id=chat_id, 
+                                           text=text,
+                                           read_timeout=MESSAGE_TIMEOUT,
+                                           write_timeout=MESSAGE_TIMEOUT)
             return
         
         case str(x) if x.replace(' Track','').isnumeric():
             # Get data
             index = x.split()[0]
-            found = track_anime(id=int(index),chat_id=str(update.effective_chat.id))
+            found = track_anime(id=int(index),chat_id=str(chat_id))
 
             # Send message
             text = 'Successfully tracked '+found[0]["namePreferred"]+'!'
             buttons = []
             subscribe = [InlineKeyboardButton(weebot.settings.menu.get('Subscribe')+' Subscribe', callback_data='Substracker '+index+' Track')]
             buttons.append(subscribe)
-            await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                message_id=update.callback_query.message.message_id,
+            await context.bot.edit_message_text(chat_id=chat_id, 
+                                                message_id=message_id,
                                                 text=text,
-                                                reply_markup=InlineKeyboardMarkup(buttons))
+                                                reply_markup=InlineKeyboardMarkup(buttons),
+                                                read_timeout=MESSAGE_TIMEOUT,
+                                                write_timeout=MESSAGE_TIMEOUT)
             
             # Remove conversation fuzzy handler
-            conversationFuzzyStrValueId = str(update.effective_chat.id)+str(update.callback_query.from_user.id)
+            conversationFuzzyStrValueId = str(chat_id)+str(user_id)
             weebot.settings.conversationFuzzyStr.pop(conversationFuzzyStrValueId)
             return
         
         case _:
             # Return one screen
-            if not('no' in optionClicked) and str(update.callback_query.message.message_id) in weebot.settings.conversations:
-                weebot.settings.conversations.pop(str(update.callback_query.message.message_id))
+            if not('no' in optionClicked) and str(message_id) in weebot.settings.conversations:
+                weebot.settings.conversations.pop(str(message_id))
 
     # Send message
-    await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                        message_id=update.callback_query.message.message_id,
-                                        text=text)
+    await context.bot.edit_message_text(chat_id=chat_id, 
+                                        message_id=message_id,
+                                        text=text,
+                                        read_timeout=MESSAGE_TIMEOUT,
+                                        write_timeout=MESSAGE_TIMEOUT)
     
     # Update last time this conversation fuzzy got a follow up
     conversationFuzzyStrValue = {
         "Value": 'Track',
         "Timestamp": datetime.datetime.now(),
-        "Message": str(update.callback_query.message.message_id)
+        "Message": str(message_id)
     }
-    conversationFuzzyStrValueId = str(update.effective_chat.id)+str(update.callback_query.from_user.id)
+    conversationFuzzyStrValueId = str(chat_id)+str(user_id)
     weebot.settings.conversationFuzzyStr.update({conversationFuzzyStrValueId: conversationFuzzyStrValue})
 
 async def handle_untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -200,10 +219,10 @@ async def handle_untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Set data
     baseText = 'Which Anime you want to untrack:\n\n'
     confirmationText = 'Are you sure you want to untrack '
-    successfulText = ' successfully untracked '
+    successfulText = 'Successfully untracked '
 
     # Handle untrack flow
-    await optionHandler('Untrack',update,context,baseText,confirmationText,successfulText)
+    await optionHandler('Untrack', update, context, baseText, confirmationText, successfulText)
     
 async def handle_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -219,7 +238,7 @@ async def handle_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     successfulText = ' successfully subscribed to '
 
     # Handle subscribe flow
-    await optionHandler('Subscribe',update,context,baseText,confirmationText,successfulText)
+    await optionHandler('Subscribe', update, context, baseText, confirmationText, successfulText)
     
 async def handle_unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -235,7 +254,7 @@ async def handle_unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE)
     successfulText = ' successfully unsubscribed from '
 
     # Handle unsubscribe flow
-    await optionHandler('Unsubscribe',update,context,baseText,confirmationText,successfulText)
+    await optionHandler('Unsubscribe', update, context, baseText, confirmationText, successfulText)
     
 async def handle_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -251,7 +270,7 @@ async def handle_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     successfulText = ' let\'s watch '
 
     # Handle ping flow
-    await optionHandler('Ping',update,context,baseText,confirmationText,successfulText)
+    await optionHandler('Ping', update, context, baseText, confirmationText, successfulText)
 
 async def handle_response(text: str, update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -262,10 +281,14 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
     :param update: Telegram's incoming update
     :param context: Telegram's context
     """
+    # Get data
+    chat_id = update.effective_chat.id
+    user_id = update.message.from_user.id
+
     # Process message
     processed: str = text.lower()
     response = 'Can you throw me the ⚾ again? I didn\'t find it. 😔'
-    conversationFuzzyStrValueId = str(update.effective_chat.id)+str(update.message.from_user.id)
+    conversationFuzzyStrValueId = str(chat_id)+str(user_id)
 
     # Handle message
     if conversationFuzzyStrValueId in weebot.settings.conversationFuzzyStr:
@@ -278,7 +301,8 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
         # Choose what to do
         if 'Track' in currentFuzzyStr:
             # Check if anime is already tracked
-            is_tracked, found, msg = check_if_tracked(search_term=processed,chat_id=str(update.effective_chat.id))
+            is_tracked, found, msg = check_if_tracked(search_term=processed,
+                                                      chat_id=str(chat_id))
 
             # Track
             if(not is_tracked):
@@ -301,11 +325,13 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
                 buttons.append(no)
 
                 # Send message
-                created_message = await context.bot.send_message(chat_id=update.effective_chat.id, 
-                                                                    text=response,
-                                                                    reply_markup=InlineKeyboardMarkup(buttons),
-                                                                    parse_mode='HTML',
-                                                                    disable_web_page_preview=True)
+                created_message = await context.bot.send_message(chat_id=chat_id, 
+                                                                 text=response,
+                                                                 reply_markup=InlineKeyboardMarkup(buttons),
+                                                                 parse_mode='HTML',
+                                                                 disable_web_page_preview=True,
+                                                                 read_timeout=MESSAGE_TIMEOUT,
+                                                                 write_timeout=MESSAGE_TIMEOUT)
                 
                 # Update last time this conversation got a follow up
                 conversationValue = {
@@ -318,7 +344,10 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
             else:
                 response = found["namePreferred"] + ' is already being tracked!\nI will ping you when new episodes are released! 😋'
                 # Send message
-                await context.bot.send_message(chat_id=update.effective_chat.id,text=response)
+                await context.bot.send_message(chat_id=chat_id,
+                                               text=response, 
+                                               read_timeout=MESSAGE_TIMEOUT, 
+                                               write_timeout=MESSAGE_TIMEOUT)
                 weebot.settings.conversationFuzzyStr.pop(conversationFuzzyStrValueId)
             
             return
@@ -328,7 +357,9 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
             if use_regex(processed):
                 # Get data
                 index = str(currentFuzzyStr).replace('Update ','')
-                updated, animeName, animeEpisodes = update_anime(id=int(index),chat_id=str(update.effective_chat.id),episode=int(processed))
+                updated, animeName, animeEpisodes = update_anime(id=int(index),
+                                                                 chat_id=str(chat_id),
+                                                                 episode=int(processed))
 
                 # Set response
                 response = animeName+' has only '+str(animeEpisodes)+' episodes. Please send me a lower number!'
@@ -351,8 +382,10 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
             response = 'Better now! 🥰'
     
     # Send message
-    await context.bot.send_message(chat_id=update.effective_chat.id,
-                                   text=response)
+    await context.bot.send_message(chat_id=chat_id,
+                                   text=response,
+                                   read_timeout=MESSAGE_TIMEOUT,
+                                   write_timeout=MESSAGE_TIMEOUT)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -363,6 +396,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: Telegram's context
     """
     # Get data
+    chat_id = update.effective_chat.id
+    user_id = update.message.from_user.id
+    message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else ''
     message_type: str = update.message.chat.type
     text: str = update.message.text
 
@@ -371,9 +407,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Message was sent in a group
     if message_type == 'group':
         # Check if a conversation fuzzy str related to the message replied is in progress, otherwise ignore
-        conversationFuzzyStrValueId = str(update.effective_chat.id)+str(update.message.from_user.id)
+        conversationFuzzyStrValueId = str(chat_id)+str(user_id)
         if conversationFuzzyStrValueId in weebot.settings.conversationFuzzyStr:
-            if weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(update.message.reply_to_message.message_id):
+            if weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(message_id):
                 return
         else:
             return
@@ -383,8 +419,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if weebot.settings.BOT_USERNAME in text:
             new_text: str = text.replace(weebot.settings.BOT_USERNAME,'').strip()
         
-        await handle_response(new_text,update,context)
+        await handle_response(new_text, update, context)
 
     # Message was sent in a private conversation
     else:
-        await handle_response(text,update,context)
+        await handle_response(text, update, context)

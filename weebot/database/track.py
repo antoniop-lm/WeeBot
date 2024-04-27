@@ -54,7 +54,8 @@ def check_if_tracked(id: int = -1, search_term: str = None, chat_id: str = None)
     
     # Set response
     if not is_tracked:
-        found = search_anime(id=id, search_term=search_term)
+        found = search_anime(id=id, 
+                             search_term=search_term)
         msg = "Found {} results.".format(len(found))
 
     else:
@@ -70,8 +71,8 @@ def track_anime(id: int = None, chat_id: str = None):
     :param chat_id: Telegram's chat id
     :return: Anime tracked
     """
-    # Set data
     from weebot.utils import orderByName
+    # Set data
     found = search_anime(id=id)
     data = []
 
@@ -173,6 +174,77 @@ def untrack_anime(id: int = None, chat_id: str = None):
             file.truncate()
 
     return updated, animeName
+
+def untrack_multiple_animes(indexList: object, chat_id: str):
+    """
+    Untrack multiple animes based on list of animes index, chat id and user id.
+    
+    :param indexList: List of anime index
+    :param chat_id: Telegram's chat id
+    :return: True if successfully updated, False otherwise, List of untracked anime names and List of failed anime names
+    """
+    # Set data
+    data = []
+    animes = []
+    updated = False
+    remove = False
+    count = 0
+
+    # Iterate over list of tracked animes and check if it is tracked by the context provided
+    with open(TRACKED_LIST_FILE, "r+") as file:
+        file.seek(0,2)
+
+        if (file.tell()):
+            file.seek(0)
+            data = json.load(file)
+            newData = []
+
+            for anime in data:
+                saveAnime = True
+                untracked = False
+                newWatchlist = []
+                for watchlist in anime["watchlist"]:
+                    if chat_id in watchlist:
+                        # Check if index matches the list provided
+                        if str(count) in indexList:
+                            # Remove context
+                            if anime["namePreferred"] not in animes:
+                                animes.append(anime["namePreferred"])
+                            updated = True
+                            untracked = True
+
+                        else:
+                            newWatchlist.append(watchlist)
+
+                        count += 1
+
+                    else:
+                        newWatchlist.append(watchlist)
+
+                # Save new watchlist
+                if untracked:
+                    anime["watchlist"] = newWatchlist
+                    
+                # No one is tracking anymore
+                if len(newWatchlist) == 0:
+                    remove = True
+                    saveAnime = False
+
+                # Add to aux list if more contexts tracks
+                if saveAnime:
+                    newData.append(anime)
+
+            # Remove anime from file if no one is tracking
+            if remove:
+                data = newData
+        
+        # Update file
+        if (updated):
+            file.seek(0)
+            file.write(json.dumps(data) + '\n')
+            file.truncate()
+
+    return updated, animes
 
 def retrieve_anime_list(chat_id: str, pageNumber: int = 1):
     """

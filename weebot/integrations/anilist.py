@@ -177,7 +177,7 @@ def calcRatio(anime: str, search_term: str):
 
     # Add weight if it is a substring or have a close distance
     substring = 0
-    if (anime in search_term) or (search_term in anime) or distance(anime,search_term) < ANIME_DISTANCE:
+    if (anime in search_term) or (search_term in anime) or distance(anime, search_term) < ANIME_DISTANCE:
         substring = 1
 
     # Set final ratio
