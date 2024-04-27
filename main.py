@@ -41,7 +41,8 @@ def handleSavedConversations():
         listToDelete = []
         for option in weebot.settings.conversations:
             if weebot.settings.conversations.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
-                asyncio.run(sendMessageUpdates(chat=weebot.settings.conversations.get(option).get('chat_id'), message=option))
+                if weebot.settings.conversations.get(option).get('chat_id') != None:
+                    asyncio.run(sendMessageUpdates(chat=weebot.settings.conversations.get(option).get('chat_id'), message=option))
                 listToDelete.append(option)
 
         for option in listToDelete:
