@@ -14,7 +14,8 @@ pip install -r requirements.txt
 
 Create a credential.json file at root folder with bot username and bot token.
 
-```python main.py
+```bash
+python main.py
 ```
 
 ## License
