@@ -5,6 +5,7 @@ This script start Anime Watch Party Handler Telegram Bot
 
 :method handleSavedConversations(): NoReturn
 :method sendEpisodesUpdates(chat: str, anime: str): NoReturn
+:method sendMessageUpdates(chat: str, message: str): NoReturn
 :method handleEpisodesUpdates(): NoReturn
 :method error(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 
@@ -40,6 +41,7 @@ def handleSavedConversations():
         listToDelete = []
         for option in weebot.settings.conversations:
             if weebot.settings.conversations.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
+                asyncio.run(sendMessageUpdates(chat=weebot.settings.conversations.get(option).get('chat_id'), message=option))
                 listToDelete.append(option)
 
         for option in listToDelete:
@@ -69,6 +71,21 @@ def handleSavedConversations():
             pickle.dump(weebot.settings.conversationFuzzyStr, f)
 
         sleep(CONVERSATION_CHECK_DELAY)
+
+async def sendMessageUpdates(chat: str, message: str):
+    """Asynchronous method.
+
+    Edit message to expire them
+    
+    :param chat: Telegram's chat id
+    :param message: Telegram's message id
+    """
+    app = Application.builder().token(weebot.settings.TOKEN).build()
+    await app.bot.edit_message_text(chat_id=chat, 
+                                    message_id=message,
+                                    text='This message expired. 😰', 
+                                    read_timeout=MESSAGE_TIMEOUT, 
+                                    write_timeout=MESSAGE_TIMEOUT)
 
 async def sendEpisodesUpdates(chat: str, anime: str):
     """Asynchronous method.

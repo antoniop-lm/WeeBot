@@ -248,7 +248,9 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                     conversationFuzzyStrValue = {
                         "Value": operation+' '+index,
                         "Timestamp": datetime.datetime.now(),
-                        "Message": str(message_id)
+                        "Message": str(message_id),
+                        "chat_id": str(chat_id),
+                        "user_id": str(user_id)
                     }
                     conversationFuzzyStrValueId = str(chat_id)+str(user_id)
                     weebot.settings.conversationFuzzyStr.update({conversationFuzzyStrValueId: conversationFuzzyStrValue})
@@ -311,7 +313,9 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
         # Create conversation handler
         conversationValue = {
             "Value": str(chat_id)+str(user_id),
-            "Timestamp": datetime.datetime.now()
+            "Timestamp": datetime.datetime.now(),
+            "chat_id": str(chat_id),
+            "user_id": str(user_id)
         }
 
         weebot.settings.conversations.update({str(created_message.message_id): conversationValue})
