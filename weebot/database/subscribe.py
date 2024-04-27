@@ -6,6 +6,7 @@ This script define Anime Watch Party Handler Telegram Bot subscribe and unsubscr
 :method subscribe_anime(id: int = None, chat_id: str = None, user_id: str = None, username: str = None): tuple[bool, str]
 :method subscribe_multiple_animes(indexList: object, chat_id: str, user_id: str, username: str): tuple[bool, list, list]
 :method unsubscribe_anime(id: int = None, chat_id: str = None, user_id: str = None): tuple[bool, str]
+:method unsubscribe_multiple_animes(indexList: object, chat_id: str, user_id: str): tuple[bool, list, list]
 :method retrieve_subscribable_anime_list(chat_id: str, user_id: str, pageNumber: int = 1): tuple[dict, int]
 :method retrieve_unsubscribable_anime_list(chat_id: str, user_id: str, pageNumber: int = 1): tuple[dict, int]
 """

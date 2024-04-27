@@ -6,6 +6,7 @@ This script define Anime Watch Party Handler Telegram Bot track and untrack oper
 :method check_if_tracked(id: int = -1, search_term: str = None, chat_id: str = None): tuple[bool, list, str]
 :method track_anime(id: int = None, chat_id: str = None): list
 :method untrack_anime(id: int = None, chat_id: str = None): tuple[bool, str]
+:method untrack_multiple_animes(indexList: object, chat_id: str): tuple[bool, list]
 :method retrieve_anime_list(chat_id: str, pageNumber: int = 1): tuple[dict, int]
 :method retrieve_anime_list_detail(chat_id: str, pageNumber: int = 1, usePagination: bool = True): tuple[dict, int, int, str]
 """
@@ -177,11 +178,11 @@ def untrack_anime(id: int = None, chat_id: str = None):
 
 def untrack_multiple_animes(indexList: object, chat_id: str):
     """
-    Untrack multiple animes based on list of animes index, chat id and user id.
+    Untrack multiple animes based on list of animes index and chat id.
     
     :param indexList: List of anime index
     :param chat_id: Telegram's chat id
-    :return: True if successfully updated, False otherwise, List of untracked anime names and List of failed anime names
+    :return: True if successfully updated, False otherwise and List of untracked anime names
     """
     # Set data
     data = []

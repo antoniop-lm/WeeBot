@@ -41,7 +41,9 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result = 'Success'
     conversationValue = {
         "Value": str(chat_id)+str(user_id),
-        "Timestamp": datetime.datetime.now()
+        "Timestamp": datetime.datetime.now(),
+        "chat_id": str(chat_id),
+        "user_id": str(user_id)
     }
 
     # Check if the conversation is being tracked

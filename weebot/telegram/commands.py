@@ -7,6 +7,8 @@ This script define Anime Watch Party Handler Telegram Bot command handlers
 :method help_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 :method ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 :method subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
+:method unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
+:method untrack_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 :method list_command(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 """
 
@@ -57,7 +59,9 @@ async def options_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Create conversation handler
     conversationValue = {
         "Value": str(chat_id)+str(user_id),
-        "Timestamp": datetime.datetime.now()
+        "Timestamp": datetime.datetime.now(),
+        "chat_id": str(chat_id),
+        "user_id": str(user_id)
     }
 
     weebot.settings.conversations.update({str(created_message.message_id): conversationValue})

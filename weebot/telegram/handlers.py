@@ -203,7 +203,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conversationFuzzyStrValue = {
         "Value": 'Track',
         "Timestamp": datetime.datetime.now(),
-        "Message": str(message_id)
+        "Message": str(message_id),
+        "chat_id": str(chat_id),
+        "user_id": str(user_id)
     }
     conversationFuzzyStrValueId = str(chat_id)+str(user_id)
     weebot.settings.conversationFuzzyStr.update({conversationFuzzyStrValueId: conversationFuzzyStrValue})
@@ -336,7 +338,9 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
                 # Update last time this conversation got a follow up
                 conversationValue = {
                     "Value": conversationFuzzyStrValueId,
-                    "Timestamp": datetime.datetime.now()
+                    "Timestamp": datetime.datetime.now(),
+                    "chat_id": str(chat_id),
+                    "user_id": str(user_id)
                 }
                 weebot.settings.conversations.update({str(created_message.message_id): conversationValue})
             
