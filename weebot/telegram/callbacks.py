@@ -30,46 +30,51 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # logging.info('conversationPagination: %s',weebot.settings.conversationPagination)
     # logging.info('conversationFuzzyStr: %s',weebot.settings.conversationFuzzyStr)
 
+    # Get data
+    chat_id = update.effective_chat.id
+    user_id = update.callback_query.from_user.id
+    message_id = update.callback_query.message.message_id
+    option = update.callback_query.data
+
     # Set callback data
     commandsToIgnore = ['Substracker']
-    option = update.callback_query.data
     result = 'Success'
     conversationValue = {
-        "Value": str(update.effective_chat.id)+str(update.callback_query.from_user.id),
+        "Value": str(chat_id)+str(user_id),
         "Timestamp": datetime.datetime.now()
     }
 
     # Check if the conversation is being tracked
-    if not (str(update.callback_query.message.message_id) in weebot.settings.conversations):
+    if not (str(message_id) in weebot.settings.conversations):
         await update.callback_query.answer('This message expired. 😰 Could you please send /options again? 🥺')
         return
     # Check if is the same user that started the conversation
-    if ((weebot.settings.conversations.get(str(update.callback_query.message.message_id)).get('Value') != conversationValue.get('Value')) 
+    if ((weebot.settings.conversations.get(str(message_id)).get('Value') != conversationValue.get('Value')) 
         and not [i for i in commandsToIgnore if i in option]):
         await update.callback_query.answer('Bondo is helping other person, please make your own request or I will be confused 😵')
         return
     
     # Update last time this conversation got a follow up
-    weebot.settings.conversations.update({str(update.callback_query.message.message_id): conversationValue})
+    weebot.settings.conversations.update({str(message_id): conversationValue})
 
     # Handle options
     match option:
         case str(x) if 'List' in x:
-            await handle_list(update,context)
+            await handle_list(update, context)
         case str(x) if 'Update' in x:
-            await handle_update(update,context)
+            await handle_update(update, context)
         case str(x) if 'Track' in x:
-            await handle_track(update,context)
+            await handle_track(update, context)
         case str(x) if 'Untrack' in x:
-            await handle_untrack(update,context)
+            await handle_untrack(update, context)
         case str(x) if 'Subscribe' in x:
-            await handle_subscribe(update,context)
+            await handle_subscribe(update, context)
         case str(x) if 'Unsubscribe' in x:
-            await handle_unsubscribe(update,context)
+            await handle_unsubscribe(update, context)
         case str(x) if 'Ping' in x:
-            await handle_ping(update,context)
+            await handle_ping(update, context)
         case _:
             result = 'Error'
-            weebot.settings.conversations.pop(str(update.callback_query.message.message_id))
+            weebot.settings.conversations.pop(str(message_id))
     
     await update.callback_query.answer(result)

@@ -183,6 +183,62 @@ def unsubscribe_anime(id: int = None, chat_id: str = None, user_id: str = None):
 
     return updated, animeName
 
+def unsubscribe_multiple_animes(indexList: object, chat_id: str, user_id: str):
+    """
+    Unsubscribe user to multiple animes based on list of animes index, chat id and user id.
+    
+    :param indexList: List of anime index
+    :param chat_id: Telegram's chat id
+    :param user_id: Telegram's user id
+    :return: True if successfully updated, False otherwise, List of unsubscribed anime names and List of failed anime names
+    """
+    # Set data
+    data = []
+    animes = []
+    failedAnimes = []
+    updated = False
+    count = 0
+
+    # Iterate over list of tracked animes and check if it is tracked by the context provided
+    with open(TRACKED_LIST_FILE, "r+") as file:
+        file.seek(0,2)
+
+        if (file.tell()):
+            file.seek(0)
+            data = json.load(file)
+
+            for anime in data:
+                for watchlist in anime["watchlist"]:
+                    if chat_id in watchlist:
+                        # Check if index matches the list provided
+                        if str(count) in indexList:
+                            newParty = []
+                            notUnsubscribed = True
+                            for user in watchlist[chat_id]["party"]:
+                                if user_id not in user:
+                                    newParty.append(user)
+                                else:
+                                    if anime["namePreferred"] not in animes:
+                                        animes.append(anime["namePreferred"])
+                                    updated = True
+                                    notUnsubscribed = False
+
+                            if notUnsubscribed and anime["namePreferred"] not in failedAnimes:
+                                failedAnimes.append(anime["namePreferred"])
+                            # Remove party if no one is subscribed
+                            watchlist[chat_id]["party"] = newParty
+
+                        count += 1
+                        break
+        
+        # Update file
+        if (updated):
+            file.seek(0)
+            file.write(json.dumps(data) + '\n')
+            file.truncate()
+
+    return updated, animes, failedAnimes
+
 def retrieve_subscribable_anime_list(chat_id: str, user_id: str, pageNumber: int = 1):
     """
     Retrieve subscribable animes based on pagination, chat id and user id.
