@@ -6,3 +6,8 @@ rapidfuzz==3.8.1
 requests==2.31.0
 urllib3==2.2.1
 python-telegram-bot==20.7
+pytz==2024.1
+APScheduler==3.10.4
+six==1.16.0
+tzdata==2024.1
+tzlocal==5.2

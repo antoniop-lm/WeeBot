@@ -125,7 +125,11 @@ def update_all_anime():
         # Query for anime data on anilist
         for id in queryList:
             found = search_anime(id=id)
+            if len(found) == 0:
+                continue
             for anime in data:
+                if "imdb" in anime["url"]:
+                    continue
                 if anime["id"] == found[0]["id"]:
                     # Update information if any is found
                     if (anime["status"] != found[0]["status"] 

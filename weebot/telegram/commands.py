@@ -54,7 +54,9 @@ async def options_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                      text=text,
                                                      reply_markup=InlineKeyboardMarkup(buttons),
                                                      read_timeout=MESSAGE_TIMEOUT,
-                                                     write_timeout=MESSAGE_TIMEOUT)
+                                                     write_timeout=MESSAGE_TIMEOUT,
+                                                     connect_timeout=MESSAGE_TIMEOUT,
+                                                     pool_timeout=MESSAGE_TIMEOUT)
     
     # Create conversation handler
     conversationValue = {
@@ -87,7 +89,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                    text=text,
                                    parse_mode='MarkdownV2',
                                    read_timeout=MESSAGE_TIMEOUT,
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
 
 async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -121,7 +125,9 @@ async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=chat_id, 
                                    text=text, 
                                    read_timeout=MESSAGE_TIMEOUT, 
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
     
 async def subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -161,7 +167,9 @@ async def subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=chat_id, 
                                    text=text, 
                                    read_timeout=MESSAGE_TIMEOUT, 
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
     
 async def unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -200,7 +208,9 @@ async def unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     await context.bot.send_message(chat_id=chat_id, 
                                    text=text, 
                                    read_timeout=MESSAGE_TIMEOUT, 
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
     
 async def untrack_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -232,7 +242,9 @@ async def untrack_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=chat_id, 
                                    text=text, 
                                    read_timeout=MESSAGE_TIMEOUT, 
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
 
 async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -262,4 +274,6 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                    parse_mode='HTML',
                                    disable_web_page_preview=True,
                                    read_timeout=MESSAGE_TIMEOUT,
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)

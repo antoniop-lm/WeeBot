@@ -156,7 +156,6 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
     pageNumber = (weebot.settings.conversationPagination.get(str(message_id)).get('Value') 
                   if str(message_id) in weebot.settings.conversationPagination 
                   else 1)
-    logging.info('teste')
     
     # Update page number based on option
     match optionClicked:
@@ -207,12 +206,15 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                                                 text=text,
                                                 reply_markup=InlineKeyboardMarkup(buttons),
                                                 read_timeout=MESSAGE_TIMEOUT,
-                                                write_timeout=MESSAGE_TIMEOUT)
+                                                write_timeout=MESSAGE_TIMEOUT,
+                                                connect_timeout=MESSAGE_TIMEOUT,
+                                                pool_timeout=MESSAGE_TIMEOUT)
             return
         case str(x) if 'yes' in x:
             # Get data
             index = x.split()[1]
             text = ''
+            isPing = False
 
             # Insert match case to call backend
             match operation:
@@ -242,6 +244,7 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                                                       chat_id=str(chat_id))
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if len(usernames) != 0:
+                        isPing = True
                         text = ' '.join(usernames)+successfulText+animeName+'!'
                 case 'Update':
                     text += successfulText
@@ -256,11 +259,27 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                     weebot.settings.conversationFuzzyStr.update({conversationFuzzyStrValueId: conversationFuzzyStrValue})
             
             # Update message
-            await context.bot.edit_message_text(chat_id=chat_id, 
+            if isPing:
+                await context.bot.delete_message(chat_id=chat_id, 
                                                 message_id=message_id,
-                                                text=text,
                                                 read_timeout=MESSAGE_TIMEOUT,
-                                                write_timeout=MESSAGE_TIMEOUT)
+                                                write_timeout=MESSAGE_TIMEOUT,
+                                                connect_timeout=MESSAGE_TIMEOUT,
+                                                pool_timeout=MESSAGE_TIMEOUT)
+                await context.bot.send_message(chat_id=chat_id, 
+                                               text=text,
+                                               read_timeout=MESSAGE_TIMEOUT,
+                                               write_timeout=MESSAGE_TIMEOUT,
+                                               connect_timeout=MESSAGE_TIMEOUT,
+                                               pool_timeout=MESSAGE_TIMEOUT)
+            else:
+                await context.bot.edit_message_text(chat_id=chat_id, 
+                                                    message_id=message_id,
+                                                    text=text,
+                                                    read_timeout=MESSAGE_TIMEOUT,
+                                                    write_timeout=MESSAGE_TIMEOUT,
+                                                    connect_timeout=MESSAGE_TIMEOUT,
+                                                    pool_timeout=MESSAGE_TIMEOUT)
             
             # Clear conversation handlers
             if str(message_id) in weebot.settings.conversationPagination:
@@ -281,7 +300,9 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                                                     text=text,
                                                     reply_markup=InlineKeyboardMarkup(buttons),
                                                     read_timeout=MESSAGE_TIMEOUT,
-                                                    write_timeout=MESSAGE_TIMEOUT)
+                                                    write_timeout=MESSAGE_TIMEOUT,
+                                                    connect_timeout=MESSAGE_TIMEOUT,
+                                                    pool_timeout=MESSAGE_TIMEOUT)
                 return
 
     # Create menu, update conversation handlers and message
@@ -299,7 +320,9 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                                             parse_mode='HTML',
                                             disable_web_page_preview=True,
                                             read_timeout=MESSAGE_TIMEOUT,
-                                            write_timeout=MESSAGE_TIMEOUT)
+                                            write_timeout=MESSAGE_TIMEOUT,
+                                            connect_timeout=MESSAGE_TIMEOUT,
+                                            pool_timeout=MESSAGE_TIMEOUT)
     else:
         # Send message
         created_message = await context.bot.send_message(chat_id=chat_id, 
@@ -308,7 +331,9 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                                                         parse_mode='HTML',
                                                         disable_web_page_preview=True,
                                                         read_timeout=MESSAGE_TIMEOUT,
-                                                        write_timeout=MESSAGE_TIMEOUT)
+                                                        write_timeout=MESSAGE_TIMEOUT,
+                                                        connect_timeout=MESSAGE_TIMEOUT,
+                                                        pool_timeout=MESSAGE_TIMEOUT)
         
         # Create conversation handler
         conversationValue = {
