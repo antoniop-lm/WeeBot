@@ -70,7 +70,9 @@ async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                     text=text,
                                                     reply_markup=InlineKeyboardMarkup(buttons),
                                                     read_timeout=MESSAGE_TIMEOUT,
-                                                    write_timeout=MESSAGE_TIMEOUT)
+                                                    write_timeout=MESSAGE_TIMEOUT,
+                                                    connect_timeout=MESSAGE_TIMEOUT,
+                                                    pool_timeout=MESSAGE_TIMEOUT)
                 return
 
     # Get anime list and set message
@@ -114,7 +116,9 @@ async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                         parse_mode='HTML',
                                         disable_web_page_preview=True,
                                         read_timeout=MESSAGE_TIMEOUT,
-                                        write_timeout=MESSAGE_TIMEOUT)
+                                        write_timeout=MESSAGE_TIMEOUT,
+                                        connect_timeout=MESSAGE_TIMEOUT,
+                                        pool_timeout=MESSAGE_TIMEOUT)
 
 async def handle_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -162,7 +166,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(chat_id=chat_id, 
                                            text=text,
                                            read_timeout=MESSAGE_TIMEOUT,
-                                           write_timeout=MESSAGE_TIMEOUT)
+                                           write_timeout=MESSAGE_TIMEOUT,
+                                           connect_timeout=MESSAGE_TIMEOUT,
+                                           pool_timeout=MESSAGE_TIMEOUT)
             return
         
         case str(x) if x.replace(' Track','').isnumeric():
@@ -180,7 +186,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                 text=text,
                                                 reply_markup=InlineKeyboardMarkup(buttons),
                                                 read_timeout=MESSAGE_TIMEOUT,
-                                                write_timeout=MESSAGE_TIMEOUT)
+                                                write_timeout=MESSAGE_TIMEOUT,
+                                                connect_timeout=MESSAGE_TIMEOUT,
+                                                pool_timeout=MESSAGE_TIMEOUT)
             
             # Remove conversation fuzzy handler
             conversationFuzzyStrValueId = str(chat_id)+str(user_id)
@@ -197,7 +205,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                         message_id=message_id,
                                         text=text,
                                         read_timeout=MESSAGE_TIMEOUT,
-                                        write_timeout=MESSAGE_TIMEOUT)
+                                        write_timeout=MESSAGE_TIMEOUT,
+                                        connect_timeout=MESSAGE_TIMEOUT,
+                                        pool_timeout=MESSAGE_TIMEOUT)
     
     # Update last time this conversation fuzzy got a follow up
     conversationFuzzyStrValue = {
@@ -333,7 +343,9 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
                                                                  parse_mode='HTML',
                                                                  disable_web_page_preview=True,
                                                                  read_timeout=MESSAGE_TIMEOUT,
-                                                                 write_timeout=MESSAGE_TIMEOUT)
+                                                                 write_timeout=MESSAGE_TIMEOUT,
+                                                                 connect_timeout=MESSAGE_TIMEOUT,
+                                                                 pool_timeout=MESSAGE_TIMEOUT)
                 
                 # Update last time this conversation got a follow up
                 conversationValue = {
@@ -351,7 +363,9 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
                 await context.bot.send_message(chat_id=chat_id,
                                                text=response, 
                                                read_timeout=MESSAGE_TIMEOUT, 
-                                               write_timeout=MESSAGE_TIMEOUT)
+                                               write_timeout=MESSAGE_TIMEOUT,
+                                               connect_timeout=MESSAGE_TIMEOUT,
+                                               pool_timeout=MESSAGE_TIMEOUT)
                 weebot.settings.conversationFuzzyStr.pop(conversationFuzzyStrValueId)
             
             return
@@ -389,7 +403,9 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
     await context.bot.send_message(chat_id=chat_id,
                                    text=response,
                                    read_timeout=MESSAGE_TIMEOUT,
-                                   write_timeout=MESSAGE_TIMEOUT)
+                                   write_timeout=MESSAGE_TIMEOUT,
+                                   connect_timeout=MESSAGE_TIMEOUT,
+                                   pool_timeout=MESSAGE_TIMEOUT)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.

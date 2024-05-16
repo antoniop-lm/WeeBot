@@ -3,10 +3,8 @@
 """\
 This script start Anime Watch Party Handler Telegram Bot
 
-:method handleSavedConversations(): NoReturn
-:method sendEpisodesUpdates(chat: str, anime: str): NoReturn
-:method sendMessageUpdates(chat: str, message: str): NoReturn
-:method handleEpisodesUpdates(): NoReturn
+:method handleSavedConversations(ContextTypes.DEFAULT_TYPE): NoReturn
+:method handleEpisodesUpdates(ContextTypes.DEFAULT_TYPE): NoReturn
 :method error(update: Update, context: ContextTypes.DEFAULT_TYPE): NoReturn
 
 Usage: main.py
@@ -21,99 +19,81 @@ __email__ = "aplmazzarolo@gmail.com"
 from weebot import EPISODE_CHECK_DELAY, DELETE_DELAY, CONVERSATION_CHECK_DELAY, MESSAGE_TIMEOUT
 from weebot import CONVERSATION_FILE, CONVERSATION_FUZZY_STR_FILE, CONVERSATION_PAGINATION_FILE
 import weebot.settings
-import logging, threading, pickle, datetime, asyncio
+import logging, pickle, datetime
 from time import sleep
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, JobQueue
 from weebot.database.update import update_all_anime
 from weebot.telegram.callbacks import menu_callback
 from weebot.telegram.commands import options_command, help_command, ping_command, subscribe_command, list_command, unsubscribe_command, untrack_command
 from weebot.telegram.handlers import handle_message
 
-def handleSavedConversations():
-    """
+async def handleSavedConversations(context: ContextTypes.DEFAULT_TYPE):
+    """Asynchronous method.
+
     Expire and save conversation handlers.
-
     Run as thread.
+
+    :param context: Telegram's context
     """
-    while True:
-        now = datetime.datetime.now()
-        listToDelete = []
-        for option in weebot.settings.conversations:
-            if weebot.settings.conversations.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
-                if weebot.settings.conversations.get(option).get('chat_id') != None:
-                    asyncio.run(sendMessageUpdates(chat=weebot.settings.conversations.get(option).get('chat_id'), message=option))
-                listToDelete.append(option)
+    now = datetime.datetime.now()
+    listToDelete = []
+    for option in weebot.settings.conversations:
+        if weebot.settings.conversations.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
+            if weebot.settings.conversations.get(option).get('chat_id') != None:
+                await context.bot.edit_message_text(chat_id=weebot.settings.conversations.get(option).get('chat_id'), 
+                                                    message_id=option,
+                                                    text='This message expired. 😰', 
+                                                    read_timeout=MESSAGE_TIMEOUT, 
+                                                    write_timeout=MESSAGE_TIMEOUT,
+                                                    connect_timeout=MESSAGE_TIMEOUT,
+                                                    pool_timeout=MESSAGE_TIMEOUT)
+            listToDelete.append(option)
 
-        for option in listToDelete:
-            weebot.settings.conversations.pop(option)
+    for option in listToDelete:
+        weebot.settings.conversations.pop(option)
 
-        listToDelete = []
-        for option in weebot.settings.conversationPagination:
-            if weebot.settings.conversationPagination.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
-                listToDelete.append(option)
+    listToDelete = []
+    for option in weebot.settings.conversationPagination:
+        if weebot.settings.conversationPagination.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
+            listToDelete.append(option)
 
-        for option in listToDelete:
-            weebot.settings.conversationPagination.pop(option)
+    for option in listToDelete:
+        weebot.settings.conversationPagination.pop(option)
 
-        listToDelete = []
-        for option in weebot.settings.conversationFuzzyStr:
-            if weebot.settings.conversationFuzzyStr.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
-                listToDelete.append(option)
+    listToDelete = []
+    for option in weebot.settings.conversationFuzzyStr:
+        if weebot.settings.conversationFuzzyStr.get(option).get('Timestamp') + datetime.timedelta(minutes=DELETE_DELAY) < now:
+            listToDelete.append(option)
 
-        for option in listToDelete:
-            weebot.settings.conversationFuzzyStr.pop(option)
-        
-        with open(CONVERSATION_FILE, 'wb') as f:
-            pickle.dump(weebot.settings.conversations, f)
-        with open(CONVERSATION_PAGINATION_FILE, 'wb') as f:
-            pickle.dump(weebot.settings.conversationPagination, f)
-        with open(CONVERSATION_FUZZY_STR_FILE, 'wb') as f:
-            pickle.dump(weebot.settings.conversationFuzzyStr, f)
+    for option in listToDelete:
+        weebot.settings.conversationFuzzyStr.pop(option)
+    
+    with open(CONVERSATION_FILE, 'wb') as f:
+        pickle.dump(weebot.settings.conversations, f)
+    with open(CONVERSATION_PAGINATION_FILE, 'wb') as f:
+        pickle.dump(weebot.settings.conversationPagination, f)
+    with open(CONVERSATION_FUZZY_STR_FILE, 'wb') as f:
+        pickle.dump(weebot.settings.conversationFuzzyStr, f)
 
-        sleep(CONVERSATION_CHECK_DELAY)
-
-async def sendMessageUpdates(chat: str, message: str):
+async def handleEpisodesUpdates(context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
 
-    Edit message to expire them
-    
-    :param chat: Telegram's chat id
-    :param message: Telegram's message id
-    """
-    app = Application.builder().token(weebot.settings.TOKEN).build()
-    await app.bot.edit_message_text(chat_id=chat, 
-                                    message_id=message,
-                                    text='This message expired. 😰', 
-                                    read_timeout=MESSAGE_TIMEOUT, 
-                                    write_timeout=MESSAGE_TIMEOUT)
-
-async def sendEpisodesUpdates(chat: str, anime: str):
-    """Asynchronous method.
-
-    Send information about new anime episode released to a telegram chat.
-    
-    :param chat: Telegram's chat id
-    :param anime: Anime message content
-    """
-    app = Application.builder().token(weebot.settings.TOKEN).build()
-    await app.bot.send_message(chat_id=chat, 
-                               text=anime, 
-                               read_timeout=MESSAGE_TIMEOUT, 
-                               write_timeout=MESSAGE_TIMEOUT)
-
-def handleEpisodesUpdates():
-    """
     Send information about new anime episode released for each telegram chat and anime.
-    """
-    while True:
-        pingList = update_all_anime()
-        for ping in pingList:
-            for chat in ping.keys():
-                for anime in ping[chat]:
-                    asyncio.run(sendEpisodesUpdates(chat=chat,anime=anime))
+    Run as thread.
 
-        sleep(EPISODE_CHECK_DELAY)
+    :param context: Telegram's context
+    """
+    pingList = update_all_anime()
+    for ping in pingList:
+        for chat in ping.keys():
+            for anime in ping[chat]:
+                await context.bot.send_message(chat_id=chat,
+                                               text=anime,
+                                               read_timeout=MESSAGE_TIMEOUT,
+                                               write_timeout=MESSAGE_TIMEOUT,
+                                               connect_timeout=MESSAGE_TIMEOUT,
+                                               pool_timeout=MESSAGE_TIMEOUT)
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -156,15 +136,18 @@ if __name__ == '__main__':
     app.add_handler(CallbackQueryHandler(menu_callback))
 
     # Update file and expire conversations
-    t = threading.Thread(target=handleSavedConversations)
-    t.daemon = True
-    t.start()
+    conversationBackup_job_queue: JobQueue = app.job_queue
+    conversationBackup_job_queue.run_repeating(handleSavedConversations, CONVERSATION_CHECK_DELAY)
 
     # Send new episodes updates
-    t2 = threading.Thread(target=handleEpisodesUpdates)
-    t2.daemon = True
-    t2.start()
+    episodeUpdate_job_queue: JobQueue = app.job_queue
+    episodeUpdate_job_queue.run_repeating(handleEpisodesUpdates, EPISODE_CHECK_DELAY)
 
     # Polls the bot
     logging.info('Polling...')
-    app.run_polling(poll_interval=3)
+    app.run_polling(poll_interval=3, 
+                    close_loop=False,
+                    read_timeout=MESSAGE_TIMEOUT, 
+                    write_timeout=MESSAGE_TIMEOUT,
+                    connect_timeout=MESSAGE_TIMEOUT,
+                    pool_timeout=MESSAGE_TIMEOUT)
