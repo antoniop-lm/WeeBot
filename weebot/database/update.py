@@ -4,6 +4,7 @@
 This script define Anime Watch Party Handler Telegram Bot update operations
 
 :method update_anime(id: int = None, chat_id: str = None, episode: int = None): tuple[bool, str, int]
+:method update_multiple_animes(indexList: object, chat_id: str): tuple[bool, list]
 :method retrieve_updatable_anime_list(chat_id: str, pageNumber: int = 1): tuple[dict, int]
 :method update_all_anime(): list
 """
@@ -49,7 +50,7 @@ def update_anime(id: int = None, chat_id: str = None, episode: int = None):
                         # Update episode if context is found and pass validations
                         if chat_id in watchlist:
                             animeEpisodes = anime["episodes"]
-                            if animeEpisodes != None and animeEpisodes >= episode and episode > 0:
+                            if animeEpisodes != None and animeEpisodes >= episode and episode >= 0:
                                 updated = True
                                 watchlist[chat_id]["episode"] = episode
                                 break
@@ -63,6 +64,49 @@ def update_anime(id: int = None, chat_id: str = None, episode: int = None):
             file.truncate()
 
     return updated, animeName, animeEpisodes
+
+def update_multiple_animes(indexList: object, chat_id: str):
+    """
+    Update multiple animes based on list of animes index and chat id.
+    
+    :param indexList: List of anime index
+    :param chat_id: Telegram's chat id
+    :return: True if successfully updated, False otherwise and List of updated anime names
+    """
+    # Set data
+    data = []
+    animes = []
+    updated = False
+    count = 0
+
+    # Iterate over list of tracked animes and check if it is tracked by the context provided
+    with open(TRACKED_LIST_FILE, "r+") as file:
+        file.seek(0,2)
+
+        if (file.tell()):
+            file.seek(0)
+            data = json.load(file)
+
+            for anime in data:
+                for watchlist in anime["watchlist"]:
+                    if chat_id in watchlist:
+                        # Check if index matches the list provided
+                        if str(count) in indexList:
+                            animeEpisodes = anime["episodes"]
+                            episode = watchlist[chat_id]["episode"] + 1
+                            if animeEpisodes != None and animeEpisodes > episode and episode >= 0:
+                                updated = True
+                                watchlist[chat_id]["episode"] = episode
+
+                        count += 1
+        
+        # Update file
+        if (updated):
+            file.seek(0)
+            file.write(json.dumps(data) + '\n')
+            file.truncate()
+
+    return updated, animes
 
 def retrieve_updatable_anime_list(chat_id: str, pageNumber: int = 1):
     """

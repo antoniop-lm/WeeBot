@@ -26,6 +26,7 @@ from weebot.database.ping import ping_anime, retrieve_pingable_anime_list
 from weebot.database.subscribe import subscribe_anime, unsubscribe_anime, retrieve_subscribable_anime_list, retrieve_unsubscribable_anime_list
 from weebot.database.track import untrack_anime, retrieve_anime_list
 from weebot.database.update import retrieve_updatable_anime_list
+from weebot.telegram.commands import list_command
 
 def orderByName(e: object):
     """
@@ -239,6 +240,7 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if updated:
                         text = successfulText+animeName+'!'
+                        await list_command(update,context)
                 case 'Ping':
                     usernames, animeName = ping_anime(id=int(index),
                                                       chat_id=str(chat_id))

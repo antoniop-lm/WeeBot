@@ -29,6 +29,7 @@ from telegram.ext import ContextTypes
 from weebot.database.subscribe import subscribe_anime
 from weebot.database.track import track_anime, check_if_tracked, retrieve_anime_list_detail
 from weebot.database.update import update_anime
+from weebot.telegram.commands import list_command
 
 async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -181,6 +182,8 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
             buttons = []
             subscribe = [InlineKeyboardButton(weebot.settings.menu.get('Subscribe')+' Subscribe', callback_data='Substracker '+index+' Track')]
             buttons.append(subscribe)
+            await list_command(update,context)
+            
             await context.bot.edit_message_text(chat_id=chat_id, 
                                                 message_id=message_id,
                                                 text=text,
@@ -429,7 +432,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if a conversation fuzzy str related to the message replied is in progress, otherwise ignore
         conversationFuzzyStrValueId = str(chat_id)+str(user_id)
         if conversationFuzzyStrValueId in weebot.settings.conversationFuzzyStr:
-            if weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(message_id):
+            if ((weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(message_id))
+                and not(update.message.reply_to_message.from_user.is_bot)):
                 return
         else:
             return
