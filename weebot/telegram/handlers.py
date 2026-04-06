@@ -181,6 +181,7 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
             buttons = []
             subscribe = [InlineKeyboardButton(weebot.settings.menu.get('Subscribe')+' Subscribe', callback_data='Substracker '+index+' Track')]
             buttons.append(subscribe)
+            
             await context.bot.edit_message_text(chat_id=chat_id, 
                                                 message_id=message_id,
                                                 text=text,
@@ -189,6 +190,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                 write_timeout=MESSAGE_TIMEOUT,
                                                 connect_timeout=MESSAGE_TIMEOUT,
                                                 pool_timeout=MESSAGE_TIMEOUT)
+            
+            from weebot.telegram.commands import list_command
+            await list_command(update,context)
             
             # Remove conversation fuzzy handler
             conversationFuzzyStrValueId = str(chat_id)+str(user_id)
@@ -421,6 +425,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else ''
     message_type: str = update.message.chat.type
     text: str = update.message.text
+    is_edited = True if ((update.message != None) and (update.message.edit_date != None)) else False
+    if is_edited:
+        return
 
     # logging.info(f'User (%s) in %s: "%s"', update.message.chat.id, message_type, text)
 
@@ -429,7 +436,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if a conversation fuzzy str related to the message replied is in progress, otherwise ignore
         conversationFuzzyStrValueId = str(chat_id)+str(user_id)
         if conversationFuzzyStrValueId in weebot.settings.conversationFuzzyStr:
-            if weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(message_id):
+            if ((weebot.settings.conversationFuzzyStr.get(conversationFuzzyStrValueId).get("Message") != str(message_id))
+                and not(update.message.reply_to_message.from_user.is_bot)):
                 return
         else:
             return

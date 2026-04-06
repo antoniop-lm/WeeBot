@@ -92,7 +92,7 @@ def track_anime(id: int = None, chat_id: str = None):
                     anime["watchlist"].append(
                         {
                             chat_id: {
-                                "episode": 1,
+                                "episode": 0,
                                 "party": []
                             }
                         }
@@ -105,7 +105,7 @@ def track_anime(id: int = None, chat_id: str = None):
             found[0]["watchlist"] = [
                 {
                     chat_id: {
-                        "episode": 1,
+                        "episode": 0,
                         "party": []
                     }
                 }

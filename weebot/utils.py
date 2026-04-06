@@ -239,6 +239,8 @@ async def optionHandler(operation: str, update: Update, context: ContextTypes.DE
                     text = 'Something went wrong 😰, please try again! 🙏'
                     if updated:
                         text = successfulText+animeName+'!'
+                        from weebot.telegram.commands import list_command
+                        await list_command(update,context)
                 case 'Ping':
                     usernames, animeName = ping_anime(id=int(index),
                                                       chat_id=str(chat_id))
