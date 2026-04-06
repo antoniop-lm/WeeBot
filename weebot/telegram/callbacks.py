@@ -15,7 +15,7 @@ __email__ = "aplmazzarolo@gmail.com"
 import weebot.settings
 import logging, datetime
 from telegram import Update
-from telegram.ext import  ContextTypes
+from telegram.ext import ContextTypes
 from weebot.telegram.handlers import handle_list, handle_ping, handle_subscribe, handle_track, handle_unsubscribe, handle_untrack, handle_update
 
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -25,7 +25,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, JobQueue
 from weebot.database.update import update_all_anime
 from weebot.telegram.callbacks import menu_callback
-from weebot.telegram.commands import options_command, help_command, ping_command, subscribe_command, list_command, unsubscribe_command, untrack_command, seen_command, update_command
+from weebot.telegram.commands import options_command, help_command, ping_command, subscribe_command, list_command, unsubscribe_command, untrack_command, seen_command, update_command, catch_command
 from weebot.telegram.handlers import handle_message
 
 async def handleSavedConversations(context: ContextTypes.DEFAULT_TYPE):
@@ -126,6 +126,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('untrack', untrack_command))
     app.add_handler(CommandHandler('seen', seen_command))
     app.add_handler(CommandHandler('update', update_command))
+    app.add_handler(CommandHandler('catch', catch_command))
     app.add_handler(CommandHandler('list', list_command))
 
     # Messages
@@ -147,9 +148,5 @@ if __name__ == '__main__':
 
     # Polls the bot
     logging.info('Polling...')
-    app.run_polling(poll_interval=3, 
-                    close_loop=False,
-                    read_timeout=MESSAGE_TIMEOUT, 
-                    write_timeout=MESSAGE_TIMEOUT,
-                    connect_timeout=MESSAGE_TIMEOUT,
-                    pool_timeout=MESSAGE_TIMEOUT)
+    app.run_polling(poll_interval=3,
+                    close_loop=False)

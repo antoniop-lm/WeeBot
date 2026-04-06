@@ -29,7 +29,6 @@ from telegram.ext import ContextTypes
 from weebot.database.subscribe import subscribe_anime
 from weebot.database.track import track_anime, check_if_tracked, retrieve_anime_list_detail
 from weebot.database.update import update_anime
-from weebot.telegram.commands import list_command
 
 async def handle_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
@@ -182,7 +181,6 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
             buttons = []
             subscribe = [InlineKeyboardButton(weebot.settings.menu.get('Subscribe')+' Subscribe', callback_data='Substracker '+index+' Track')]
             buttons.append(subscribe)
-            await list_command(update,context)
             
             await context.bot.edit_message_text(chat_id=chat_id, 
                                                 message_id=message_id,
@@ -192,6 +190,9 @@ async def handle_track(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                 write_timeout=MESSAGE_TIMEOUT,
                                                 connect_timeout=MESSAGE_TIMEOUT,
                                                 pool_timeout=MESSAGE_TIMEOUT)
+            
+            from weebot.telegram.commands import list_command
+            await list_command(update,context)
             
             # Remove conversation fuzzy handler
             conversationFuzzyStrValueId = str(chat_id)+str(user_id)
@@ -424,6 +425,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else ''
     message_type: str = update.message.chat.type
     text: str = update.message.text
+    is_edited = True if ((update.message != None) and (update.message.edit_date != None)) else False
+    if is_edited:
+        return
 
     # logging.info(f'User (%s) in %s: "%s"', update.message.chat.id, message_type, text)
 

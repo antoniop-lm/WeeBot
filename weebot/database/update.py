@@ -50,7 +50,7 @@ def update_anime(id: int = None, chat_id: str = None, episode: int = None):
                         # Update episode if context is found and pass validations
                         if chat_id in watchlist:
                             animeEpisodes = anime["episodes"]
-                            if animeEpisodes != None and animeEpisodes >= episode and episode >= 0:
+                            if animeEpisodes != None and animeEpisodes > episode and episode >= 0:
                                 updated = True
                                 watchlist[chat_id]["episode"] = episode
                                 break
@@ -65,7 +65,7 @@ def update_anime(id: int = None, chat_id: str = None, episode: int = None):
 
     return updated, animeName, animeEpisodes
 
-def update_multiple_animes(indexList: object, chat_id: str):
+def update_multiple_animes(indexList: object, chat_id: str, episode: int = None):
     """
     Update multiple animes based on list of animes index and chat id.
     
@@ -78,6 +78,7 @@ def update_multiple_animes(indexList: object, chat_id: str):
     animes = []
     updated = False
     count = 0
+    animeEpisodes = 0
 
     # Iterate over list of tracked animes and check if it is tracked by the context provided
     with open(TRACKED_LIST_FILE, "r+") as file:
@@ -93,10 +94,12 @@ def update_multiple_animes(indexList: object, chat_id: str):
                         # Check if index matches the list provided
                         if str(count) in indexList:
                             animeEpisodes = anime["episodes"]
-                            episode = watchlist[chat_id]["episode"] + 1
-                            if animeEpisodes != None and animeEpisodes > episode and episode >= 0:
+                            if anime["namePreferred"] not in animes:
+                                animes.append(anime["namePreferred"])
+                            oldEpisode = episode if episode != None else (watchlist[chat_id]["episode"] + 1)
+                            if animeEpisodes != None and animeEpisodes > oldEpisode and oldEpisode >= 0:
                                 updated = True
-                                watchlist[chat_id]["episode"] = episode
+                                watchlist[chat_id]["episode"] = oldEpisode
 
                         count += 1
         
@@ -106,7 +109,7 @@ def update_multiple_animes(indexList: object, chat_id: str):
             file.write(json.dumps(data) + '\n')
             file.truncate()
 
-    return updated, animes
+    return updated, animes, animeEpisodes
 
 def retrieve_updatable_anime_list(chat_id: str, pageNumber: int = 1):
     """
