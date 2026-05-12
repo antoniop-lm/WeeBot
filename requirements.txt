@@ -4,7 +4,7 @@ idna==3.6
 Levenshtein==0.25.1
 rapidfuzz==3.8.1
 requests==2.31.0
-urllib3==2.2.1
+urllib3==2.7.0
 python-telegram-bot==20.7
 pytz==2024.1
 APScheduler==3.10.4
