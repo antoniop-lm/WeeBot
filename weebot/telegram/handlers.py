@@ -305,6 +305,7 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
     processed: str = text.lower()
     response = 'Can you throw me the ⚾ again? I didn\'t find it. 😔'
     conversationFuzzyStrValueId = str(chat_id)+str(user_id)
+    updated = False
 
     # Handle message
     if conversationFuzzyStrValueId in weebot.settings.conversationFuzzyStr:
@@ -410,6 +411,10 @@ async def handle_response(text: str, update: Update, context: ContextTypes.DEFAU
                                    write_timeout=MESSAGE_TIMEOUT,
                                    connect_timeout=MESSAGE_TIMEOUT,
                                    pool_timeout=MESSAGE_TIMEOUT)
+    
+    if updated:
+        from weebot.telegram.commands import list_command
+        await list_command(update,context)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.

@@ -308,6 +308,9 @@ async def seen_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                    connect_timeout=MESSAGE_TIMEOUT,
                                    pool_timeout=MESSAGE_TIMEOUT)
     
+    if updated:
+        await list_command(update,context)
+    
 async def update_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.
 
@@ -330,6 +333,7 @@ async def update_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     anime_id = args[0]
     episode = args[1]
+    updated = False
     
     # Command context
     text = 'Something went wrong 😰, please try again! 🙏'
@@ -355,6 +359,9 @@ async def update_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                    write_timeout=MESSAGE_TIMEOUT,
                                    connect_timeout=MESSAGE_TIMEOUT,
                                    pool_timeout=MESSAGE_TIMEOUT)
+    
+    if updated:
+        await list_command(update,context)
 
 async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asynchronous method.

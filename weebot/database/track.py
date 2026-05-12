@@ -302,8 +302,9 @@ def retrieve_anime_list_detail(chat_id: str, pageNumber: int = 1, usePagination:
             for anime in data:
                 for watchlist in anime["watchlist"]:
                     if chat_id in watchlist:
-                        episode = ((str(watchlist[chat_id]["episode"]) + '/' + str(anime["episodes"]) + ' episodes') 
-                                   if str(anime["episodes"]) != 'None' 
+                        animeEpisodes = anime["episodes"] if (anime["episodes"] != None) else anime["nextAiringEpisode"]["episode"]
+                        episode = ((str(watchlist[chat_id]["episode"]) + '/' + str(animeEpisodes) + ' episodes') 
+                                   if str(animeEpisodes) != 'None' 
                                    else 'TBA')
                         episode += ((' - episode ' + str(anime["nextAiringEpisode"]["episode"]) + ': ' 
                                      + datetime.strftime(datetime.fromtimestamp(anime["nextAiringEpisode"]["airingAt"]),'%d/%m/%Y, %H:%M')) 
