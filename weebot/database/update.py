@@ -133,8 +133,9 @@ def retrieve_updatable_anime_list(chat_id: str, pageNumber: int = 1):
             for anime in data:
                 for watchlist in anime["watchlist"]:
                     if chat_id in watchlist:
+                        animeEpisodes = anime["episodes"] if (anime["episodes"] != None) else anime["nextAiringEpisode"]["episode"]
                         # Add only updatable animes
-                        if anime["episodes"] != None:
+                        if animeEpisodes != None:
                             aniList.update({anime["id"]: anime["namePreferred"]})
 
     # Set pagination information and split anime list accordingly
