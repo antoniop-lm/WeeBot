@@ -49,7 +49,11 @@ def update_anime(id: int = None, chat_id: str = None, episode: int = None):
                     for watchlist in anime["watchlist"]:
                         # Update episode if context is found and pass validations
                         if chat_id in watchlist:
-                            animeEpisodes = anime["episodes"] if (anime["episodes"] != None) else anime["nextAiringEpisode"]["episode"]
+                            animeEpisodes = (anime["episodes"] 
+                                         if (anime["episodes"] != None) 
+                                         else (anime["nextAiringEpisode"]["episode"] 
+                                               if anime["nextAiringEpisode"] != None 
+                                               else None))
                             if animeEpisodes != None and animeEpisodes > episode and episode >= 0:
                                 updated = True
                                 watchlist[chat_id]["episode"] = episode
@@ -93,7 +97,11 @@ def update_multiple_animes(indexList: object, chat_id: str, episode: int = None)
                     if chat_id in watchlist:
                         # Check if index matches the list provided
                         if str(count) in indexList:
-                            animeEpisodes = anime["episodes"] if (anime["episodes"] != None) else anime["nextAiringEpisode"]["episode"]
+                            animeEpisodes = (anime["episodes"] 
+                                         if (anime["episodes"] != None) 
+                                         else (anime["nextAiringEpisode"]["episode"] 
+                                               if anime["nextAiringEpisode"] != None 
+                                               else None))
                             if anime["namePreferred"] not in animes:
                                 animes.append(anime["namePreferred"])
                             oldEpisode = episode if episode != None else (watchlist[chat_id]["episode"] + 1)
@@ -133,7 +141,11 @@ def retrieve_updatable_anime_list(chat_id: str, pageNumber: int = 1):
             for anime in data:
                 for watchlist in anime["watchlist"]:
                     if chat_id in watchlist:
-                        animeEpisodes = anime["episodes"] if (anime["episodes"] != None) else anime["nextAiringEpisode"]["episode"]
+                        animeEpisodes = (anime["episodes"] 
+                                         if (anime["episodes"] != None) 
+                                         else (anime["nextAiringEpisode"]["episode"] 
+                                               if anime["nextAiringEpisode"] != None 
+                                               else None))
                         # Add only updatable animes
                         if animeEpisodes != None:
                             aniList.update({anime["id"]: anime["namePreferred"]})
